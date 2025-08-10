@@ -1,0 +1,554 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+using OfflineClanRoyale.Core;
+using OfflineClanRoyale.Networking;
+
+namespace OfflineClanRoyale.UI
+{
+    /// <summary>
+    /// Manages all UI elements and user interactions
+    /// Handles main menu, lobby, and in-game interface
+    /// </summary>
+    public class UIManager : MonoBehaviour
+    {
+        [Header("UI Panels")]
+        [SerializeField] private GameObject mainMenuPanel;
+        [SerializeField] private GameObject lobbyPanel;
+        [SerializeField] private GameObject gameUIPanel;
+        [SerializeField] private GameObject pausePanel;
+        [SerializeField] private GameObject settingsPanel;
+
+        [Header("Main Menu")]
+        [SerializeField] private Button hostGameButton;
+        [SerializeField] private Button joinGameButton;
+        [SerializeField] private Button settingsButton;
+        [SerializeField] private Button quitButton;
+        [SerializeField] private TextMeshProUGUI gameTitleText;
+
+        [Header("Lobby")]
+        [SerializeField] private Transform playerListContent;
+        [SerializeField] private GameObject playerListItemPrefab;
+        [SerializeField] private Button startGameButton;
+        [SerializeField] private Button readyButton;
+        [SerializeField] private Button leaveLobbyButton;
+        [SerializeField] private TextMeshProUGUI lobbyStatusText;
+        [SerializeField] private Transform deviceListContent;
+        [SerializeField] private GameObject deviceListItemPrefab;
+        [SerializeField] private Button scanButton;
+        [SerializeField] private Button stopScanButton;
+
+        [Header("Game UI")]
+        [SerializeField] private TextMeshProUGUI matchTimerText;
+        [SerializeField] private TextMeshProUGUI elixirText;
+        [SerializeField] private TextMeshProUGUI resourcesText;
+        [SerializeField] private Transform cardHandContent;
+        [SerializeField] private GameObject cardPrefab;
+        [SerializeField] private Button pauseButton;
+        [SerializeField] private Transform playerInfoPanel;
+        [SerializeField] private GameObject playerInfoPrefab;
+
+        [Header("Pause Menu")]
+        [SerializeField] private Button resumeButton;
+        [SerializeField] private Button settingsPauseButton;
+        [SerializeField] private Button quitToMenuButton;
+
+        [Header("Settings")]
+        [SerializeField] private Slider volumeSlider;
+        [SerializeField] private Toggle debugToggle;
+        [SerializeField] private Button applySettingsButton;
+        [SerializeField] private Button cancelSettingsButton;
+
+        [Header("Debug")]
+        [SerializeField] private bool enableDebugUI = true;
+        [SerializeField] private TextMeshProUGUI debugText;
+
+        // Events
+        public event System.Action OnHostGameRequested;
+        public event System.Action OnJoinGameRequested;
+        public event System.Action OnStartGameRequested;
+        public event System.Action OnReadyToggleRequested;
+        public event System.Action OnLeaveLobbyRequested;
+        public event System.Action OnPauseGameRequested;
+        public event System.Action OnResumeGameRequested;
+        public event System.Action OnQuitToMenuRequested;
+
+        // Internal state
+        private Dictionary<int, GameObject> playerListItems = new Dictionary<int, GameObject>();
+        private Dictionary<string, GameObject> deviceListItems = new Dictionary<string, GameObject>();
+        private List<GameObject> cardHandItems = new List<GameObject>();
+        private Dictionary<int, GameObject> playerInfoItems = new Dictionary<int, GameObject>();
+
+        private void Awake()
+        {
+            SetupButtonListeners();
+            InitializeUI();
+        }
+
+        private void SetupButtonListeners()
+        {
+            // Main menu buttons
+            if (hostGameButton != null)
+                hostGameButton.onClick.AddListener(() => OnHostGameRequested?.Invoke());
+            
+            if (joinGameButton != null)
+                joinGameButton.onClick.AddListener(() => OnJoinGameRequested?.Invoke());
+            
+            if (settingsButton != null)
+                settingsButton.onClick.AddListener(ShowSettings);
+            
+            if (quitButton != null)
+                quitButton.onClick.AddListener(() => Application.Quit());
+
+            // Lobby buttons
+            if (startGameButton != null)
+                startGameButton.onClick.AddListener(() => OnStartGameRequested?.Invoke());
+            
+            if (readyButton != null)
+                readyButton.onClick.AddListener(() => OnReadyToggleRequested?.Invoke());
+            
+            if (leaveLobbyButton != null)
+                leaveLobbyButton.onClick.AddListener(() => OnLeaveLobbyRequested?.Invoke());
+            
+            if (scanButton != null)
+                scanButton.onClick.AddListener(StartScanning);
+            
+            if (stopScanButton != null)
+                stopScanButton.onClick.AddListener(StopScanning);
+
+            // Game UI buttons
+            if (pauseButton != null)
+                pauseButton.onClick.AddListener(() => OnPauseGameRequested?.Invoke());
+
+            // Pause menu buttons
+            if (resumeButton != null)
+                resumeButton.onClick.AddListener(() => OnResumeGameRequested?.Invoke());
+            
+            if (settingsPauseButton != null)
+                settingsPauseButton.onClick.AddListener(ShowSettings);
+            
+            if (quitToMenuButton != null)
+                quitToMenuButton.onClick.AddListener(() => OnQuitToMenuRequested?.Invoke());
+
+            // Settings buttons
+            if (applySettingsButton != null)
+                applySettingsButton.onClick.AddListener(ApplySettings);
+            
+            if (cancelSettingsButton != null)
+                cancelSettingsButton.onClick.AddListener(HideSettings);
+        }
+
+        private void InitializeUI()
+        {
+            // Set initial UI state
+            ShowMainMenu();
+            
+            // Set game title
+            if (gameTitleText != null)
+                gameTitleText.text = "OfflineClanRoyale";
+        }
+
+        #region Panel Management
+
+        public void ShowMainMenu()
+        {
+            SetAllPanelsInactive();
+            if (mainMenuPanel != null)
+                mainMenuPanel.SetActive(true);
+        }
+
+        public void ShowLobby()
+        {
+            SetAllPanelsInactive();
+            if (lobbyPanel != null)
+                lobbyPanel.SetActive(true);
+            
+            UpdateLobbyStatus("Waiting for players...");
+        }
+
+        public void ShowGameUI()
+        {
+            SetAllPanelsInactive();
+            if (gameUIPanel != null)
+                gameUIPanel.SetActive(true);
+        }
+
+        public void ShowPauseMenu()
+        {
+            if (pausePanel != null)
+                pausePanel.SetActive(true);
+        }
+
+        public void HidePauseMenu()
+        {
+            if (pausePanel != null)
+                pausePanel.SetActive(false);
+        }
+
+        private void ShowSettings()
+        {
+            if (settingsPanel != null)
+                settingsPanel.SetActive(true);
+            
+            LoadSettings();
+        }
+
+        private void HideSettings()
+        {
+            if (settingsPanel != null)
+                settingsPanel.SetActive(false);
+        }
+
+        private void SetAllPanelsInactive()
+        {
+            if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
+            if (lobbyPanel != null) lobbyPanel.SetActive(false);
+            if (gameUIPanel != null) gameUIPanel.SetActive(false);
+            if (pausePanel != null) pausePanel.SetActive(false);
+            if (settingsPanel != null) settingsPanel.SetActive(false);
+        }
+
+        #endregion
+
+        #region Main Menu
+
+        public void SetHostButtonInteractable(bool interactable)
+        {
+            if (hostGameButton != null)
+                hostGameButton.interactable = interactable;
+        }
+
+        public void SetJoinButtonInteractable(bool interactable)
+        {
+            if (joinGameButton != null)
+                joinGameButton.interactable = interactable;
+        }
+
+        #endregion
+
+        #region Lobby Management
+
+        public void UpdatePlayerList(List<PlayerData> players)
+        {
+            // Clear existing player list items
+            foreach (var item in playerListItems.Values)
+            {
+                Destroy(item);
+            }
+            playerListItems.Clear();
+
+            // Create new player list items
+            if (playerListContent != null && playerListItemPrefab != null)
+            {
+                foreach (var player in players)
+                {
+                    var playerItem = Instantiate(playerListItemPrefab, playerListContent);
+                    var playerListItem = playerItem.GetComponent<PlayerListItem>();
+                    
+                    if (playerListItem != null)
+                    {
+                        playerListItem.Initialize(player);
+                    }
+                    
+                    playerListItems[player.Id] = playerItem;
+                }
+            }
+
+            // Update start game button
+            UpdateStartGameButton(players);
+        }
+
+        private void UpdateStartGameButton(List<PlayerData> players)
+        {
+            if (startGameButton == null)
+                return;
+
+            bool canStart = players.Count >= 2;
+            bool allReady = true;
+            
+            foreach (var player in players)
+            {
+                if (!player.IsReady)
+                {
+                    allReady = false;
+                    break;
+                }
+            }
+
+            startGameButton.interactable = canStart && allReady;
+        }
+
+        public void UpdateLobbyStatus(string status)
+        {
+            if (lobbyStatusText != null)
+                lobbyStatusText.text = status;
+        }
+
+        public void SetReadyButtonState(bool isReady)
+        {
+            if (readyButton != null)
+            {
+                readyButton.GetComponentInChildren<TextMeshProUGUI>().text = isReady ? "Not Ready" : "Ready";
+            }
+        }
+
+        #endregion
+
+        #region Device Discovery
+
+        public void AddDiscoveredDevice(BluetoothDevice device)
+        {
+            if (deviceListContent == null || deviceListItemPrefab == null)
+                return;
+
+            // Check if device already exists
+            if (deviceListItems.ContainsKey(device.Address))
+                return;
+
+            var deviceItem = Instantiate(deviceListItemPrefab, deviceListContent);
+            var deviceListItem = deviceItem.GetComponent<DeviceListItem>();
+            
+            if (deviceListItem != null)
+            {
+                deviceListItem.Initialize(device);
+                deviceListItem.OnConnectRequested += () => ConnectToDevice(device);
+            }
+            
+            deviceListItems[device.Address] = deviceItem;
+        }
+
+        public void RemoveDiscoveredDevice(string deviceAddress)
+        {
+            if (deviceListItems.TryGetValue(deviceAddress, out var deviceItem))
+            {
+                Destroy(deviceItem);
+                deviceListItems.Remove(deviceAddress);
+            }
+        }
+
+        public void ClearDeviceList()
+        {
+            foreach (var item in deviceListItems.Values)
+            {
+                Destroy(item);
+            }
+            deviceListItems.Clear();
+        }
+
+        private void ConnectToDevice(BluetoothDevice device)
+        {
+            var bluetoothManager = GameManager.Instance.GetComponent<BluetoothManager>();
+            bluetoothManager?.ConnectToDevice(device);
+        }
+
+        private void StartScanning()
+        {
+            var bluetoothManager = GameManager.Instance.GetComponent<BluetoothManager>();
+            bluetoothManager?.StartScanning();
+            
+            if (scanButton != null) scanButton.gameObject.SetActive(false);
+            if (stopScanButton != null) stopScanButton.gameObject.SetActive(true);
+        }
+
+        private void StopScanning()
+        {
+            var bluetoothManager = GameManager.Instance.GetComponent<BluetoothManager>();
+            bluetoothManager?.StopScanning();
+            
+            if (scanButton != null) scanButton.gameObject.SetActive(true);
+            if (stopScanButton != null) stopScanButton.gameObject.SetActive(false);
+        }
+
+        #endregion
+
+        #region Game UI
+
+        public void UpdateGameState(GameState gameState)
+        {
+            switch (gameState)
+            {
+                case GameState.WaitingForPlayers:
+                    UpdateLobbyStatus("Waiting for players...");
+                    break;
+                case GameState.Playing:
+                    UpdateLobbyStatus("Game in progress...");
+                    break;
+                case GameState.GameOver:
+                    UpdateLobbyStatus("Game over!");
+                    break;
+            }
+        }
+
+        public void UpdateMatchTimer(float timeRemaining)
+        {
+            if (matchTimerText != null)
+            {
+                int minutes = Mathf.FloorToInt(timeRemaining / 60);
+                int seconds = Mathf.FloorToInt(timeRemaining % 60);
+                matchTimerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+            }
+        }
+
+        public void UpdateElixir(float currentElixir, float maxElixir)
+        {
+            if (elixirText != null)
+                elixirText.text = $"Elixir: {currentElixir:F1}/{maxElixir}";
+        }
+
+        public void UpdateResources(int resources)
+        {
+            if (resourcesText != null)
+                resourcesText.text = $"Resources: {resources}";
+        }
+
+        public void UpdateCardHand(List<CardData> cards)
+        {
+            // Clear existing cards
+            foreach (var card in cardHandItems)
+            {
+                Destroy(card);
+            }
+            cardHandItems.Clear();
+
+            // Create new cards
+            if (cardHandContent != null && cardPrefab != null)
+            {
+                foreach (var cardData in cards)
+                {
+                    var cardItem = Instantiate(cardPrefab, cardHandContent);
+                    var cardUI = cardItem.GetComponent<CardUI>();
+                    
+                    if (cardUI != null)
+                    {
+                        cardUI.Initialize(cardData);
+                        cardUI.OnCardClicked += (position) => PlayCard(cardData.Id, position);
+                    }
+                    
+                    cardHandItems.Add(cardItem);
+                }
+            }
+        }
+
+        public void UpdatePlayerInfo(List<PlayerGameState> players)
+        {
+            // Clear existing player info
+            foreach (var item in playerInfoItems.Values)
+            {
+                Destroy(item);
+            }
+            playerInfoItems.Clear();
+
+            // Create new player info
+            if (playerInfoPanel != null && playerInfoPrefab != null)
+            {
+                foreach (var player in players)
+                {
+                    var playerInfoItem = Instantiate(playerInfoPrefab, playerInfoPanel);
+                    var playerInfoUI = playerInfoItem.GetComponent<PlayerInfoUI>();
+                    
+                    if (playerInfoUI != null)
+                    {
+                        playerInfoUI.Initialize(player);
+                    }
+                    
+                    playerInfoItems[player.PlayerId] = playerInfoItem;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Game Actions
+
+        private void PlayCard(string cardId, Vector2 position)
+        {
+            var command = new GameCommand
+            {
+                Type = GameCommandType.CardPlayed,
+                PlayerId = GameManager.Instance.LocalPlayerId,
+                Timestamp = Time.time,
+                Data = JsonUtility.ToJson(new CardPlayData { CardId = cardId, Position = position })
+            };
+            
+            GameManager.Instance.SendGameCommand(command);
+        }
+
+        private void PlaceBuilding(string buildingId, Vector2 position)
+        {
+            var command = new GameCommand
+            {
+                Type = GameCommandType.BuildingPlaced,
+                PlayerId = GameManager.Instance.LocalPlayerId,
+                Timestamp = Time.time,
+                Data = JsonUtility.ToJson(new BuildingPlaceData { BuildingId = buildingId, Position = position })
+            };
+            
+            GameManager.Instance.SendGameCommand(command);
+        }
+
+        #endregion
+
+        #region Settings
+
+        private void LoadSettings()
+        {
+            if (volumeSlider != null)
+                volumeSlider.value = PlayerPrefs.GetFloat("Volume", 1f);
+            
+            if (debugToggle != null)
+                debugToggle.isOn = PlayerPrefs.GetInt("DebugMode", 0) == 1;
+        }
+
+        private void ApplySettings()
+        {
+            if (volumeSlider != null)
+                PlayerPrefs.SetFloat("Volume", volumeSlider.value);
+            
+            if (debugToggle != null)
+                PlayerPrefs.SetInt("DebugMode", debugToggle.isOn ? 1 : 0);
+            
+            PlayerPrefs.Save();
+            HideSettings();
+        }
+
+        #endregion
+
+        #region Debug
+
+        private void Update()
+        {
+            if (enableDebugUI && debugText != null)
+            {
+                var gameManager = GameManager.Instance;
+                if (gameManager != null)
+                {
+                    debugText.text = $"Mode: {gameManager.CurrentGameMode}\n" +
+                                   $"Host: {gameManager.IsHost}\n" +
+                                   $"Players: {gameManager.ConnectedPlayers.Count}\n" +
+                                   $"FPS: {1f / Time.deltaTime:F1}";
+                }
+            }
+        }
+
+        #endregion
+    }
+
+    #region Data Structures
+
+    [System.Serializable]
+    public class CardPlayData
+    {
+        public string CardId;
+        public Vector2 Position;
+    }
+
+    [System.Serializable]
+    public class BuildingPlaceData
+    {
+        public string BuildingId;
+        public Vector2 Position;
+    }
+
+    #endregion
+}
