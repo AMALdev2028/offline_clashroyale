@@ -1,0 +1,48 @@
+@echo off
+echo === OfflineClanRoyale Test Runner ===
+echo.
+
+echo Checking for .NET Framework...
+where /q csc.exe
+if %errorlevel% neq 0 (
+    echo CSC not found in PATH, trying to find .NET Framework...
+    for /f "tokens=*" %%i in ('dir /b /s "C:\Windows\Microsoft.NET\Framework*\csc.exe" 2^>nul') do (
+        echo Found CSC at: %%i
+        echo Compiling StandaloneTest.cs...
+        "%%i" StandaloneTest.cs /out:OfflineClanRoyaleTest.exe
+        if %errorlevel% equ 0 (
+            echo Compilation successful!
+            echo Running test...
+            OfflineClanRoyaleTest.exe
+            goto :end
+        )
+    )
+    echo No .NET Framework compiler found.
+    goto :unity_instructions
+) else (
+    echo CSC found, compiling...
+    csc StandaloneTest.cs /out:OfflineClanRoyaleTest.exe
+    if %errorlevel% equ 0 (
+        echo Compilation successful!
+        echo Running test...
+        OfflineClanRoyaleTest.exe
+        goto :end
+    )
+)
+
+:unity_instructions
+echo.
+echo .NET Framework not found. To run the full Unity version:
+echo 1. Install Unity 2022.3 LTS from unity.com
+echo 2. Open this project in Unity
+echo 3. Follow QUICK_START.md
+echo.
+echo The project files are ready:
+echo - Assets/Scripts/ contains all the game code
+echo - README.md has project overview
+echo - QUICK_START.md has step-by-step instructions
+echo - BUILD_INSTRUCTIONS.md has build details
+echo.
+
+:end
+pause
