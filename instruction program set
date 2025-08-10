@@ -1,0 +1,183 @@
+# OfflineClanRoyale Build Instructions
+
+## Prerequisites
+
+### Unity Setup
+1. Install Unity 2022.3 LTS or newer
+2. Install Android Build Support module
+3. Install iOS Build Support module (macOS only)
+4. Install Visual Studio or Visual Studio Code
+
+### Android Development
+1. Install Android Studio
+2. Install Android SDK (API level 23-33)
+3. Install Android NDK
+4. Set ANDROID_HOME environment variable
+
+### iOS Development (macOS only)
+1. Install Xcode 14.0 or newer
+2. Install iOS Development tools
+3. Set up Apple Developer account
+
+## Project Setup
+
+### 1. Clone and Open Project
+```bash
+git clone <repository-url>
+cd OfflineClanRoyale
+# Open Unity and select the project folder
+```
+
+### 2. Install Required Packages
+1. Open Package Manager (Window > Package Manager)
+2. Install the following packages:
+   - Input System
+   - TextMeshPro
+   - Universal Render Pipeline
+   - Mobile Notifications (optional)
+
+### 3. Configure Project Settings
+1. Open Project Settings (Edit > Project Settings)
+2. Follow the settings in `ProjectSettings.txt`
+3. Set up build targets for Android and iOS
+
+### 4. Set Up Scenes
+1. Create Main Scene
+2. Add GameManager GameObject with components:
+   - GameManager
+   - BluetoothManager
+   - LockstepNetwork
+   - GameStateManager
+   - UIManager
+   - CardManager
+   - BaseManager
+3. Set up UI Canvas with UIManager
+4. Configure camera and lighting
+
+## Building for Android
+
+### 1. Configure Android Settings
+1. Open Player Settings
+2. Set Android tab settings:
+   - Minimum API Level: 23
+   - Target API Level: 33
+   - Scripting Backend: IL2CPP
+   - Target Architectures: ARM64
+
+### 2. Add Permissions
+Add to AndroidManifest.xml:
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+### 3. Build APK
+1. File > Build Settings
+2. Select Android platform
+3. Click "Build"
+4. Choose output location
+5. Wait for build completion
+
+### 4. Test on Device
+1. Enable Developer Options on Android device
+2. Enable USB Debugging
+3. Connect device via USB
+4. Install APK and test
+
+## Building for iOS
+
+### 1. Configure iOS Settings
+1. Open Player Settings
+2. Set iOS tab settings:
+   - Target minimum iOS Version: 13.0
+   - Scripting Backend: IL2CPP
+   - Target Device: iPhone + iPad
+
+### 2. Add Permissions
+Add to Info.plist:
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>This app uses Bluetooth for local multiplayer</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>This app uses Bluetooth for local multiplayer</string>
+```
+
+### 3. Build Xcode Project
+1. File > Build Settings
+2. Select iOS platform
+3. Click "Build"
+4. Choose output location
+5. Open generated Xcode project
+
+### 4. Build in Xcode
+1. Open generated .xcworkspace file
+2. Select target device
+3. Product > Build
+4. Product > Run (or Archive for App Store)
+
+## Testing Multiplayer
+
+### Local Testing
+1. Build APK/IPA for multiple devices
+2. Install on 2+ devices
+3. Enable Bluetooth on all devices
+4. Start game on one device as host
+5. Join from other devices
+6. Test gameplay and synchronization
+
+### Debug Features
+- Enable debug logging in GameManager
+- Use Unity Remote for testing
+- Monitor network statistics
+- Check lockstep synchronization
+
+## Performance Optimization
+
+### Mobile Optimization
+1. Set target frame rate to 30 FPS
+2. Optimize textures for mobile
+3. Use LOD for complex models
+4. Minimize draw calls
+5. Optimize Bluetooth data usage
+
+### Memory Management
+1. Pool game objects
+2. Unload unused assets
+3. Monitor memory usage
+4. Optimize garbage collection
+
+## Troubleshooting
+
+### Common Issues
+1. **Bluetooth not working**: Check permissions and device compatibility
+2. **Build errors**: Verify Unity version and package versions
+3. **Performance issues**: Check frame rate and memory usage
+4. **Sync problems**: Verify lockstep algorithm implementation
+
+### Debug Tools
+- Unity Profiler for performance analysis
+- Network debugging in GameManager
+- Bluetooth connection status monitoring
+- Lockstep algorithm statistics
+
+## Distribution
+
+### Android
+1. Generate signed APK
+2. Test on multiple devices
+3. Upload to Google Play Store
+4. Configure store listing
+
+### iOS
+1. Archive in Xcode
+2. Upload to App Store Connect
+3. Configure app metadata
+4. Submit for review
+
+## Legal Considerations
+- Ensure all assets are original or properly licensed
+- Avoid copying Supercell's exact mechanics
+- Create unique IP while maintaining similar feel
+- Follow platform guidelines for multiplayer games
