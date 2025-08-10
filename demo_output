@@ -1,0 +1,62 @@
+=== OfflineClanRoyale Standalone Test Suite ===
+
+Testing GameManager...
+✓ Game mode switched to: Lobby
+✓ Host status set to: True
+✓ Player 1 added to game
+✓ Player 2 added to game
+
+Testing BluetoothManager...
+✓ BluetoothManager initialized (mock)
+✓ Bluetooth scanning started (mock)
+✓ Discovered 2 devices
+✓ Bluetooth advertising started (mock)
+✓ Sent 5 bytes to all connected devices
+
+Testing LockstepNetwork...
+✓ LockstepNetwork initialized
+✓ LockstepNetwork host status: True
+✓ Command sent for player 1 at frame 0
+✓ Executed tick at frame 1
+
+Testing GameStateManager...
+✓ GameStateManager initialized
+✓ Player 1 (Player1) added to game state
+✓ Player 2 (Player2) added to game state
+✓ Game started successfully
+
+Testing CardManager...
+✓ CardManager initialized
+✓ Card database initialized with 4 cards
+✓ Player 1 deck initialized with 4 cards
+
+Testing BaseManager...
+✓ BaseManager initialized
+✓ Building database initialized with 3 buildings
+✓ Player 1 base initialized with 1 buildings
+
+Testing LockstepAlgorithm...
+✓ LockstepAlgorithm initialized
+✓ Input submitted for player 1 at frame 0
+✓ Executed lockstep frame 1
+
+Testing Multiplayer Simulation...
+  Simulating a 2-player match...
+  ✓ Players connected
+  ✓ Match started
+  ✓ Frame 0: Processing inputs from both players
+  ✓ Frame 1: Processing inputs from both players
+  ✓ Frame 2: Processing inputs from both players
+  ✓ Frame 3: Processing inputs from both players
+  ✓ Frame 4: Processing inputs from both players
+  ✓ Match completed
+
+=== All Tests Completed Successfully! ===
+
+🎮 The OfflineClanRoyale core systems are working!
+📱 To run the full Unity version:
+   1. Install Unity 2022.3 LTS
+   2. Open this project in Unity
+   3. Follow QUICK_START.md
+
+Press any key to exit...
